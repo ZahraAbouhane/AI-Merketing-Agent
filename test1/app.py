@@ -190,6 +190,7 @@ def execute_send_email(to: str, subject: str, body: str, recipient_name: str = "
     Sends a real email using Gmail SMTP.
     Also saves to the Excel log.
     """
+    print(f"DEBUG send_email: attempting to send to {to}")  # ← add this to explore silent failing
     try:
         msg = MIMEMultipart()
         msg["From"]    = GMAIL_SENDER
@@ -200,6 +201,8 @@ def execute_send_email(to: str, subject: str, body: str, recipient_name: str = "
         with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
             server.login(GMAIL_SENDER, GMAIL_PASSWORD)
             server.sendmail(GMAIL_SENDER, to, msg.as_string())
+
+        print(f"DEBUG send_email: sent successfully to {to}")  # ← add this to explore silent failing
 
         # Log the sent email
         execute_save_to_log(
@@ -213,6 +216,7 @@ def execute_send_email(to: str, subject: str, body: str, recipient_name: str = "
         return {"success": True, "message": f"Email sent to {to}."}
 
     except Exception as e:
+        print(f"DEBUG send_email ERROR: {str(e)}")  # ← add this to explore silent failing
         execute_save_to_log(
             sent_to=to,
             recipient_name=recipient_name,
