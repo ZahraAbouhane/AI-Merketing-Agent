@@ -20,6 +20,8 @@ from flask_cors import CORS
 from dotenv import load_dotenv
 load_dotenv()  # Load configuration from .env file
 
+from flask import send_from_directory
+
 # ─────────────────────────────────────────────
 #  CONFIGURATION  — fill these in
 # ─────────────────────────────────────────────
@@ -363,6 +365,10 @@ def agent_loop(user_message: str):
 # ─────────────────────────────────────────────
 #  FLASK ROUTES
 # ─────────────────────────────────────────────
+
+@app.route(/)
+def index():
+    return send_from_directory(".", "index.html")
 
 @app.route("/chat", methods=["POST"])
 def chat():
