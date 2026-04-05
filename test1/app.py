@@ -366,7 +366,7 @@ def agent_loop(user_message: str):
 #  FLASK ROUTES
 # ─────────────────────────────────────────────
 
-@app.route(/)
+@app.route("/")
 def index():
     return send_from_directory(".", "index.html")
 
