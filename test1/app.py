@@ -407,4 +407,6 @@ def reset():
 if __name__ == "__main__":
     print("InnerJoy Marketing Agent running at http://localhost:5000")
     print("Open index.html in your browser.")
-    app.run(debug=True, port=5000)
+    # app.run(debug=True, port=5000) #← use this to get detailed error messages in the console
+    port = int(os.environ.get("PORT", 5000)) #← use PORT env var if available (for deployment), otherwise default to 5000
+    app.run(debug=False, host="0.0.0.0", port=port)
