@@ -1,0 +1,6 @@
+test/
+test1/.env
+test1/app_resend.py
+test1/email_log.xlsx
+test1/Marketing Agent notes.txt
+test1/resendApiKey.txt
