@@ -7,11 +7,8 @@ Requirements:
 """
 
 import json
-import smtplib
 import os
 from datetime import datetime
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 
 import anthropic
 import openpyxl
@@ -22,16 +19,18 @@ load_dotenv()  # Load configuration from .env file
 
 from flask import send_from_directory
 
+import resend
+
 # ─────────────────────────────────────────────
 #  CONFIGURATION  — fill these in
 # ─────────────────────────────────────────────
 
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
-
-GMAIL_SENDER     = os.environ.get("GMAIL_SENDER")     # Gmail address used to send emails
-GMAIL_PASSWORD   = os.environ.get("GMAIL_PASSWORD")   # Gmail App Password (NOT gmail normal password)
+RESEND_API_KEY = os.environ.get("RESEND_API_KEY")
+resend.api_key = RESEND_API_KEY
+#GMAIL_SENDER     = os.environ.get("GMAIL_SENDER")     # Gmail address used to send emails
+#GMAIL_PASSWORD   = os.environ.get("GMAIL_PASSWORD")   # Gmail App Password (NOT gmail normal password)
                                         # Get it at: myaccount.google.com -> Security -> App Passwords
-
 EXCEL_FILE       = "email_log.xlsx"    # Log file name (created automatically)
 
 # ─────────────────────────────────────────────
@@ -185,38 +184,26 @@ def execute_web_search(query: str) -> dict:
         return {"error": f"Search failed: {str(e)}"}
 
 
-def execute_send_email(to: str, subject: str, body: str, recipient_name: str = "") -> dict:
-    """
-    Sends a real email using Gmail SMTP.
-    Also saves to the Excel log.
-    """
-    print(f"DEBUG send_email: attempting to send to {to}")  # ← add this to explore silent failing
+def execute_send_email(to, subject, body, recipient_name=""):
+    print(f"DEBUG send_email: attempting to send to {to}")
     try:
-        msg = MIMEMultipart()
-        msg["From"]    = GMAIL_SENDER
-        msg["To"]      = to
-        msg["Subject"] = subject
-        msg.attach(MIMEText(body, "plain"))
-
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-            server.login(GMAIL_SENDER, GMAIL_PASSWORD)
-            server.sendmail(GMAIL_SENDER, to, msg.as_string())
-
-        print(f"DEBUG send_email: sent successfully to {to}")  # ← add this to explore silent failing
-
-        # Log the sent email
+        resend.Emails.send({
+            "from": "onboarding@resend.dev",  # free test address, no domain needed
+            "to": to,
+            "subject": subject,
+            "text": body
+        })
+        print(f"DEBUG send_email: sent successfully to {to}")
         execute_save_to_log(
             sent_to=to,
             recipient_name=recipient_name,
             subject=subject,
             status="Sent",
-            notes="Sent via Gmail SMTP"
+            notes="Sent via Resend"
         )
-
         return {"success": True, "message": f"Email sent to {to}."}
-
     except Exception as e:
-        print(f"DEBUG send_email ERROR: {str(e)}")  # ← add this to explore silent failing
+        print(f"DEBUG send_email ERROR: {str(e)}")
         execute_save_to_log(
             sent_to=to,
             recipient_name=recipient_name,
@@ -224,8 +211,7 @@ def execute_send_email(to: str, subject: str, body: str, recipient_name: str = "
             status="Failed",
             notes=str(e)
         )
-        return {"error": f"Failed to send email: {str(e)}"}
-
+        return {"error": f"Failed to send: {str(e)}"}
 
 def execute_save_to_log(
     sent_to: str,
